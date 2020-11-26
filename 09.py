@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 import numpy as np
+from functions import functions
 
 selectedFunction = "levy"
 lengthOfAxis = 40
@@ -14,38 +15,15 @@ i_max = 30  # iterations count
 beta_0 = 1
 alpha = 0.7
 
-# Function variables
 d = 2
-m = 10
-a = 20
-b = 0.2
-c = 2 * np.pi
 
 
 def getToBounds(x): return tuple(edge if i > edge else -
                                  edge if i < -edge else i for i in x)
 
 
-def levy(x, y):
-    w = [1+(x-1)/4, 1+(y-1)/4]
-    return np.sin(np.pi*w[0])**2 + (w[0]-1)**2 * (1+10*np.sin(np.pi*w[0]+1)**2) + (w[1]-1)**2 * (1+10*np.sin(np.pi*w[1]+1)**2) + (w[1]-1)**2 * (1+np.sin(2*np.pi*w[1])**2)
-
-
-myFunctions = {
-    "sphere": lambda x, y: x*x + y*y,
-    "schwefel": lambda x, y: 418.9829*d - (x*np.sin(np.sqrt(np.absolute(x)))+y*np.sin(np.sqrt(np.absolute(y)))),
-    "rosenbrock": lambda x, y: (100*(y-x*x)**2+(x-1)**2),
-    "rastrigin": lambda x, y: 10*d + (x*x - 10*np.cos(2*np.pi*x))+(y*y - 10*np.cos(2*np.pi*y)),
-    "griewank": lambda x, y: ((x*x)/4000+(y*y)/4000)-((np.cos(x))*(np.cos(y/np.sqrt(2)))+1),
-    "levy": levy,
-    "michalewicz": lambda x, y: -(np.sin(x)*np.sin((x*x)/np.pi)**(2*m))-(np.sin(y)*np.sin((2*y*y)/(np.pi))**(2*m)),
-    "zakharov": lambda x, y: x*x + y*y + (0.5*x + y)**2 + (0.5*x+y)**4,
-    "ackley": lambda x, y: -a*np.exp(-b*np.sqrt((x*x+y*y)/2))-np.exp((np.cos(c*x)+np.cos(c*y))/2)+a+np.exp(1),
-}
-
-
 def countObjectiveValue(
-    individual): return myFunctions[selectedFunction](*individual)
+    individual): return functions[selectedFunction](*individual)
 
 
 def generatePopulation():
@@ -86,7 +64,7 @@ for _ in range(i_max):
 X = np.arange(-edge, edge, lengthOfAxis/elementsPerAxis)
 Y = np.arange(-edge, edge, lengthOfAxis/elementsPerAxis)
 X, Y = np.meshgrid(X, Y)
-Z = np.array(myFunctions[selectedFunction](X, Y))
+Z = np.array(functions[selectedFunction](X, Y))
 
 
 def generateUpdateFromValues(values, ax):

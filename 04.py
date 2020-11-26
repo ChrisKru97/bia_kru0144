@@ -5,22 +5,27 @@ import requests
 import re
 
 populationCount = 50
-citiesCount = 15 
+citiesCount = 15
 generationCount = 200
 axisLength = 100
 
+
 def generateNames(n):
-    #return [chr(x) for x in range(97, 123)][:n]
+    # return [chr(x) for x in range(97, 123)][:n]
     r = requests.get('https://en.wikipedia.org/wiki/List_of_largest_cities')
-    m = np.array(re.findall(r'<tr>\n<td align="left"><a href="\/wiki\/.+" title=".+">(.+)<\/a>',r.text))
+    m = np.array(re.findall(
+        r'<tr>\n<td align="left"><a href="\/wiki\/.+" title=".+">(.+)<\/a>', r.text))
     return m[:n]
+
 
 def countTotalDistance(citizen, cities):
     distance = 0
     for i, city in enumerate(citizen):
         if i < citiesCount:
-            distance+=np.sqrt(np.sum((cities[city] - cities[citizen[i+1]])**2))
+            distance += np.sqrt(np.sum((cities[city] -
+                                        cities[citizen[i+1]])**2))
     return distance
+
 
 def generatePopulation(citiesList):
     population = []
@@ -28,18 +33,21 @@ def generatePopulation(citiesList):
     for i in range(populationCount):
         newCitizen = np.copy(citiesList[1:])
         np.random.shuffle(newCitizen)
-        newCitizen=np.concatenate(([startingCity],newCitizen,[startingCity]))
+        newCitizen = np.concatenate(
+            ([startingCity], newCitizen, [startingCity]))
         population.append(newCitizen)
     return np.array(population)
 
+
 def generateCities(names):
-    randomPositions = np.random.random((citiesCount,2))*200
+    randomPositions = np.random.random((citiesCount, 2))*200
     citiesPositions = {}
     for i, city in enumerate(names):
         citiesPositions[city] = randomPositions[i]
     return citiesPositions
 
-def crossover(parent_A,parent_B):
+
+def crossover(parent_A, parent_B):
     slicePoint = np.trunc(np.random.random()*(citiesCount-3)+2).astype(int)
     offspring = np.copy(parent_A[:slicePoint])
     offspring_rest = parent_A[slicePoint:-1]
@@ -52,7 +60,8 @@ def crossover(parent_A,parent_B):
         for i, city in enumerate(B_part):
             if city in offspring:
                 B_part[i] = available.pop()
-    return np.concatenate((offspring, B_part,[offspring[0]]))
+    return np.concatenate((offspring, B_part, [offspring[0]]))
+
 
 def mutate(offspring):
     a = np.trunc((np.random.random()*citiesCount-1) + 1).astype(int)
@@ -62,6 +71,7 @@ def mutate(offspring):
     offspring[b], offspring[a] = offspring[a], offspring[b]
     return offspring
 
+
 def findBest(population, index):
     bestLength = np.Inf
     for citizen in population:
@@ -69,15 +79,16 @@ def findBest(population, index):
         if length < bestLength:
             bestCitizen = citizen
             bestLength = length
-    print('Best of generation {0} with length: {1}'.format(index,bestLength))
+    print('Best of generation {0} with length: {1}'.format(index, bestLength))
     return bestCitizen, bestLength
+
 
 names = generateNames(citiesCount)
 cities = generateCities(names)
 population = generatePopulation(names)
 new_population = np.copy(population)
 
-bestCitizen, newBestLength = findBest(population,'initial')
+bestCitizen, newBestLength = findBest(population, 'initial')
 bestOfGeneration = np.array([bestCitizen])
 
 for i in range(generationCount):
@@ -88,22 +99,24 @@ for i in range(generationCount):
             B_index = np.trunc(np.random.random()*20).astype(int)
         parent_B = population[B_index]
 
-        offspring_AB = crossover(parent_A,parent_B)
+        offspring_AB = crossover(parent_A, parent_B)
         offspring_AB = mutate(offspring_AB)
 
         offspring_distance = countTotalDistance(offspring_AB, cities)
         parent_distance = countTotalDistance(parent_A, cities)
-        
+
         if offspring_distance <= parent_distance:
-            new_population[j]=offspring_AB
+            new_population[j] = offspring_AB
     population = np.copy(new_population)
     bestCitizen, bestLength = findBest(population, i)
     if bestLength < newBestLength:
-        bestOfGeneration = np.concatenate((bestOfGeneration,np.array([bestCitizen])))
+        bestOfGeneration = np.concatenate(
+            (bestOfGeneration, np.array([bestCitizen])))
         newBestLength = bestLength
 
 fig, ax = plt.subplots()
-    
+
+
 def update(i):
     print('Showing {0}. of generations with good mutation'.format(i))
     ax.clear()
@@ -113,6 +126,7 @@ def update(i):
     for i, txt in enumerate(current):
         ax.annotate(txt, toPlot[i])
 
-a = anim.FuncAnimation(fig, update, interval=500, repeat_delay=2000, frames=len(bestOfGeneration)-1,repeat=True)
-plt.show()
 
+a = anim.FuncAnimation(fig, update, interval=500, repeat_delay=2000, frames=len(
+    bestOfGeneration)-1, repeat=True)
+plt.show()
